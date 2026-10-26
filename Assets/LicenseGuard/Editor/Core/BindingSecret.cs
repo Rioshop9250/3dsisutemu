@@ -1,0 +1,35 @@
+namespace LicenseGuard
+{
+    /// <summary>
+    /// 複合キーの1要素として必ず混ぜ込む「ツール埋め込みシークレット」。
+    /// パスワードとキーファイルが漏れても、このツール（＝Unity 上の LicenseGuard）を通さないと
+    /// 鍵を導出できないようにするためのもの。
+    ///
+    /// 注意: クライアント側に置く秘密である以上、逆コンパイルすれば取り出せる。
+    /// 自分専用のツールとして配布する場合は、下の値を独自の乱数に書き換え、
+    /// Editor フォルダを DLL 化 + 難読化して配布すること（README 参照）。
+    /// 値を変えると、変更前のツールで作った .lgpkg とは互換性がなくなる。
+    /// </summary>
+    internal static class BindingSecret
+    {
+        // 値をそのまま置かず、2つの配列の XOR として保持する（単純な文字列検索で見つからないように）
+        static readonly byte[] A =
+        {
+            0x5d, 0x1f, 0xa2, 0x7c, 0x93, 0x0e, 0xc4, 0x38, 0xe1, 0x6a, 0x27, 0xb9, 0x40, 0xd5, 0x8f, 0x12,
+            0x76, 0xcb, 0x09, 0x3e, 0xaa, 0x54, 0xf0, 0x81, 0x2d, 0x67, 0xbe, 0x13, 0xc9, 0x7a, 0x05, 0xe8,
+        };
+
+        static readonly byte[] B =
+        {
+            0x8e, 0x33, 0x4b, 0xd0, 0x1a, 0xf7, 0x62, 0xac, 0x05, 0x9c, 0xe3, 0x48, 0xb7, 0x21, 0x6d, 0xfa,
+            0x39, 0x84, 0xd2, 0x5f, 0x0b, 0xe6, 0x17, 0xc3, 0x70, 0x9a, 0x4e, 0xb5, 0x28, 0xdf, 0x91, 0x66,
+        };
+
+        public static byte[] Get()
+        {
+            var r = new byte[A.Length];
+            for (int i = 0; i < r.Length; i++) r[i] = (byte)(A[i] ^ B[i] ^ (i * 0x3b));
+            return r;
+        }
+    }
+}
